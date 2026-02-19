@@ -1,0 +1,9 @@
+# Dependencies
+**/node_modules/
+.pnpm-store/
+
+# Focus timer data
+.focus-timer
+
+# AI tool config symlink
+CLAUDE.md
