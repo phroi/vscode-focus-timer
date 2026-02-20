@@ -37,7 +37,7 @@
     // Clipboard support for wl-copy/wl-paste (used by CLAUDE.md)
     "clipboard": "sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends wl-clipboard",
     // Symlink extension into VS Code Server's extensions to install this local extension
-    "focus-timer": "ln -sfn \"$PWD\" \"$HOME/.vscode-server/extensions/phroi.focus-timer-0.0.1\""
+    "focus-timer": "ln -sfn \"$PWD\" ~/.vscode-server/extensions/phroi.focus-timer"
   },
 
   // Use the non-root 'node' user provided by the base image for safer file access and to mirror deployment permissions

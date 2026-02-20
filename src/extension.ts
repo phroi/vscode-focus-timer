@@ -3,11 +3,13 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 const FILENAME = ".focus-timer";
-const FLUSH_INTERVAL_MS = 100 * 60_000;
+const FLUSH_THRESHOLD_MS = 100 * 60_000;
+const HEARTBEAT_MS = 30_000;
+const GRACE_MS = 5 * 60_000;
 
 let focusStart: number | undefined;
 let pendingMs = 0;
-let tick: ReturnType<typeof setInterval>;
+let lastBlurAt = 0;
 
 function timerPath(): string | undefined {
   const folder = vscode.workspace.workspaceFolders?.[0];
@@ -16,7 +18,6 @@ function timerPath(): string | undefined {
 
 function appendTime(ms: number): boolean {
   const minutes = Math.ceil(ms / 60_000);
-  if (minutes <= 0) return false;
   const file = timerPath();
   if (!file || !fs.existsSync(file)) return false;
   try {
@@ -27,16 +28,40 @@ function appendTime(ms: number): boolean {
   }
 }
 
-function flush(): void {
+function flush(thresholdMs = 0): void {
   const now = Date.now();
   const elapsed = pendingMs + (focusStart !== undefined ? now - focusStart : 0);
-  if (elapsed > 0 && appendTime(elapsed)) {
+  if (elapsed >= thresholdMs && elapsed > 0 && appendTime(elapsed)) {
     pendingMs = 0;
     if (focusStart !== undefined) focusStart = now;
   }
 }
 
+function onBlur(): void {
+  if (focusStart === undefined) return;
+  const now = Date.now();
+  pendingMs += now - focusStart;
+  focusStart = undefined;
+  lastBlurAt = now;
+}
+
+function onFocus(): void {
+  const now = Date.now();
+  // Save any already-tracked time before resetting (handles duplicate focus events)
+  if (focusStart !== undefined) {
+    pendingMs += now - focusStart;
+  }
+  // If returning within grace period, backdate focusStart to cover the gap
+  const withinGrace = now - lastBlurAt <= GRACE_MS;
+  focusStart = withinGrace ? lastBlurAt : now;
+  if (withinGrace) lastBlurAt = 0;
+}
+
 export function activate(context: vscode.ExtensionContext): void {
+  focusStart = undefined;
+  pendingMs = 0;
+  lastBlurAt = 0;
+
   if (vscode.window.state.focused) {
     focusStart = Date.now();
   }
@@ -44,21 +69,32 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.window.onDidChangeWindowState((state) => {
       if (state.focused) {
-        focusStart = Date.now();
-      } else if (focusStart !== undefined) {
-        pendingMs += Date.now() - focusStart;
-        focusStart = undefined;
+        onFocus();
+      } else {
+        onBlur();
       }
     }),
   );
 
-  tick = setInterval(() => {
-    flush();
-  }, FLUSH_INTERVAL_MS);
-
+  // Heartbeat: poll vscode.window.state.focused to catch missed
+  // onDidChangeWindowState events (known VS Code bug with webviews/terminals),
+  // and flush when accumulated time crosses the threshold
+  const heartbeat = setInterval(() => {
+    const isFocused = vscode.window.state.focused;
+    if (isFocused && focusStart === undefined) {
+      onFocus();
+    } else if (!isFocused && focusStart !== undefined) {
+      onBlur();
+    }
+    flush(FLUSH_THRESHOLD_MS);
+  }, HEARTBEAT_MS);
+  context.subscriptions.push({
+    dispose(): void {
+      clearInterval(heartbeat);
+    },
+  });
 }
 
 export function deactivate(): void {
-  clearInterval(tick);
   flush();
 }

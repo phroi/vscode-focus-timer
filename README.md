@@ -18,11 +18,13 @@ echo .focus-timer >> .gitignore
 
 ## How it works
 
-While VS Code is focused, the extension accumulates time in memory. Minutes (rounded up) are appended to `.focus-timer` when the editor closes or every 100 minutes as a crash safety net.
+While VS Code is focused, the extension accumulates time in memory. Minutes (rounded up) are appended to `.focus-timer` when the editor closes. A background heartbeat also flushes every 100 focused minutes as a crash safety net.
+
+Brief breaks (up to 5 minutes) are bridged automatically so short interruptions don't fragment your session.
 
 The file is append-only, one number per line:
 
-```
+```text
 12
 5
 3
@@ -57,7 +59,7 @@ Press **F5** in VS Code to launch an Extension Development Host with the extensi
 The compiled extension is tracked in git, so no build step is needed.
 
 ```bash
-ln -sfn "$PWD" "$HOME/.vscode/extensions/phroi.focus-timer-0.0.1"
+ln -sfn "$PWD" ~/.vscode/extensions/phroi.focus-timer
 ```
 
 Restart VS Code after creating the symlink.
@@ -68,7 +70,7 @@ To auto-install this extension in a devcontainer, clone and symlink it in `postC
 
 ```jsonc
 "postCreateCommand": {
-  "focus-timer": "d=$HOME/focus-timer-ext && git clone --depth 1 https://github.com/phroi/vscode-focus-timer.git $d && ln -sfn $d \"$HOME/.vscode-server/extensions/phroi.focus-timer-0.0.1\""
+  "focus-timer": "d=~/focus-timer-ext && git clone --depth 1 https://github.com/phroi/vscode-focus-timer.git $d && ln -sfn $d ~/.vscode-server/extensions/phroi.focus-timer"
 }
 ```
 

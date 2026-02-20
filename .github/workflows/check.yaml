@@ -1,4 +1,4 @@
-name: Check (lint, build and test)
+name: Check (lint & build)
 
 on: [pull_request, push]
 
@@ -10,8 +10,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20.17.0
       - uses: pnpm/action-setup@v4
 
-      - name: Check (lint, build and test)
+      - name: Check (lint & build)
         run: pnpm check
