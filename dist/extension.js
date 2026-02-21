@@ -39,12 +39,13 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
 const FILENAME = ".focus-timer";
-const FLUSH_THRESHOLD_MS = 100 * 60000;
+const FLUSH_THRESHOLD_MS = 10 * 60000;
 const HEARTBEAT_MS = 30000;
 const GRACE_MS = 5 * 60000;
 let focusStart;
 let pendingMs = 0;
 let lastBlurAt = 0;
+let overshootMs = 0;
 function timerPath() {
     const folder = vscode.workspace.workspaceFolders?.[0];
     return folder ? path.join(folder.uri.fsPath, FILENAME) : undefined;
@@ -64,8 +65,11 @@ function appendTime(ms) {
 }
 function flush(thresholdMs = 0) {
     const now = Date.now();
-    const elapsed = pendingMs + (focusStart !== undefined ? now - focusStart : 0);
+    const raw = pendingMs + (focusStart !== undefined ? now - focusStart : 0);
+    const elapsed = Math.max(0, raw - overshootMs);
     if (elapsed >= thresholdMs && elapsed > 0 && appendTime(elapsed)) {
+        const writtenMs = Math.ceil(elapsed / 60000) * 60000;
+        overshootMs = writtenMs - elapsed;
         pendingMs = 0;
         if (focusStart !== undefined)
             focusStart = now;
@@ -95,6 +99,7 @@ function activate(context) {
     focusStart = undefined;
     pendingMs = 0;
     lastBlurAt = 0;
+    overshootMs = 0;
     if (vscode.window.state.focused) {
         focusStart = Date.now();
     }

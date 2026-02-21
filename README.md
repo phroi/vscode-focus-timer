@@ -18,7 +18,7 @@ echo .focus-timer >> .gitignore
 
 ## How it works
 
-While VS Code is focused, the extension accumulates time in memory. Minutes (rounded up) are appended to `.focus-timer` when the editor closes. A background heartbeat also flushes every 100 focused minutes as a crash safety net.
+While VS Code is focused, the extension accumulates time in memory. Minutes (rounded up) are appended to `.focus-timer` every 10 focused minutes and when the editor closes. Rounding overshoot is subtracted from the next write to keep the running total accurate.
 
 Brief breaks (up to 5 minutes) are bridged automatically so short interruptions don't fragment your session.
 
