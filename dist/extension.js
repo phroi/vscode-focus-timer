@@ -39,7 +39,7 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
 const FILENAME = ".focus-timer";
-const FLUSH_THRESHOLD_MS = 10 * 60000;
+const FLUSH_THRESHOLD_MS = 9 * 60000;
 const HEARTBEAT_MS = 30000;
 const GRACE_MS = 5 * 60000;
 let focusStart;
@@ -67,7 +67,7 @@ function flush(thresholdMs = 0) {
     const now = Date.now();
     const raw = pendingMs + (focusStart !== undefined ? now - focusStart : 0);
     const elapsed = Math.max(0, raw - overshootMs);
-    if (elapsed >= thresholdMs && elapsed > 0 && appendTime(elapsed)) {
+    if (elapsed > thresholdMs && elapsed > 0 && appendTime(elapsed)) {
         const writtenMs = Math.ceil(elapsed / 60000) * 60000;
         overshootMs = writtenMs - elapsed;
         pendingMs = 0;
