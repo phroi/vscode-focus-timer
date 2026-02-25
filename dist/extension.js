@@ -41,7 +41,7 @@ const vscode = __importStar(require("vscode"));
 const FILENAME = ".focus-timer";
 const FLUSH_THRESHOLD_MS = 9 * 60000;
 const HEARTBEAT_MS = 30000;
-const GRACE_MS = 5 * 60000;
+const GRACE_MS = 10 * 60000;
 let focusStart;
 let pendingMs = 0;
 let lastBlurAt = 0;
@@ -89,11 +89,18 @@ function onFocus() {
     if (focusStart !== undefined) {
         pendingMs += now - focusStart;
     }
-    // If returning within grace period, backdate focusStart to cover the gap
-    const withinGrace = now - lastBlurAt <= GRACE_MS;
-    focusStart = withinGrace ? lastBlurAt : now;
-    if (withinGrace)
-        lastBlurAt = 0;
+    // Linear-decay grace: short absences get nearly full credit, longer ones
+    // progressively less. credit = awayMs × (1 − awayMs / GRACE_MS), which
+    // smoothly reaches zero at GRACE_MS (no cliff edge).
+    const awayMs = now - lastBlurAt;
+    if (lastBlurAt > 0 && awayMs > 0 && awayMs <= GRACE_MS) {
+        const credit = awayMs * (1 - awayMs / GRACE_MS);
+        focusStart = now - credit;
+    }
+    else {
+        focusStart = now;
+    }
+    lastBlurAt = 0;
 }
 function activate(context) {
     focusStart = undefined;
@@ -113,8 +120,24 @@ function activate(context) {
     }));
     // Heartbeat: poll vscode.window.state.focused to catch missed
     // onDidChangeWindowState events (known VS Code bug with webviews/terminals),
-    // and flush when accumulated time crosses the threshold
+    // detect system sleep/hibernate, and flush when accumulated time crosses
+    // the threshold
+    let lastHeartbeat = Date.now();
     const heartbeat = setInterval(() => {
+        const now = Date.now();
+        const gap = now - lastHeartbeat;
+        // Detect sleep/hibernate: if the gap between heartbeats greatly exceeds
+        // the polling interval, the machine was likely suspended. Credit focus
+        // time up to the last heartbeat (best estimate of when sleep began) and
+        // start fresh so the sleep interval isn't counted.
+        if (gap > HEARTBEAT_MS * 3) {
+            if (focusStart !== undefined) {
+                pendingMs += Math.max(0, lastHeartbeat - focusStart);
+                focusStart = now;
+            }
+            lastBlurAt = 0; // don't grant grace across a sleep boundary
+        }
+        lastHeartbeat = now;
         const isFocused = vscode.window.state.focused;
         if (isFocused && focusStart === undefined) {
             onFocus();
