@@ -29,8 +29,8 @@
   "postCreateCommand": {
     // Enable corepack and fix workspace ownership for non-root user
     "permissions": "sudo corepack enable && sudo chown -R node:node /home/node ${containerWorkspaceFolder}",
-    // Needed for AI Coworker extension to work with a pnpm installation
-    "aliases": "echo \"alias claude='pnpm coworker'\" >> ~/.bash_aliases",
+    // Disable AI attribution in commits and PRs
+    "no-coauthor": "mkdir -p /home/node/.claude && echo '{\"attribution\":{\"commit\":\"\",\"pr\":\"\"}}' > /home/node/.claude/settings.json",
     // Clipboard support for wl-copy/wl-paste (used by CLAUDE.md)
     "clipboard": "sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends wl-clipboard",
     // Symlink extension into VS Code Server's extensions to install this local extension

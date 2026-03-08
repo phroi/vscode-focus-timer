@@ -31,7 +31,7 @@
     "check:full": "pnpm check:fresh && pnpm check:ci",
     "clean": "rm -rf dist",
     "clean:deep": "pnpm clean && rm -rf node_modules",
-    "coworker": "ln -sf AGENTS.md CLAUDE.md && claude --model opus --dangerously-skip-permissions"
+    "coworker": "ln -sf AGENTS.md CLAUDE.md && NODE_OPTIONS=--max-old-space-size=16384 CLAUDE_CODE_EFFORT_LEVEL=high claude --model opus[1m] --dangerously-skip-permissions"
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "^2.1.47",

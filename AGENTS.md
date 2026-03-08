@@ -5,7 +5,6 @@ Learn from past mistakes/attempts: in the comments keep knowledge of what was tr
 This file is the tool-agnostic agent config:
 
 - Refer to yourself as "AI Coworker" in docs and comments, not by product or company name
-- Never add AI tool attribution or branding to PR descriptions, commit messages, or code comments (no Co-Authored-By)
 - Do not install or use `gh` CLI
 - **Routine Pre-PR Validation**: `pnpm check:full`
 - **Open a PR**: Push the branch, then construct and present a GitHub compare URL
