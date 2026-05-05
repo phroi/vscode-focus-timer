@@ -66,11 +66,11 @@ Restart VS Code after creating the symlink.
 
 ### Devcontainer
 
-To auto-install this extension in a devcontainer, clone and symlink it in `postCreateCommand`:
+To auto-install this extension in a devcontainer, symlink the checkout that is already available inside the container into VS Code Server:
 
 ```jsonc
 "postCreateCommand": {
-  "focus-timer": "d=~/focus-timer-ext && git clone --depth 1 https://github.com/phroi/vscode-focus-timer.git $d && ln -sfn $d ~/.vscode-server/extensions/phroi.focus-timer"
+  "focus-timer": "d=/path/to/vscode-focus-timer && mkdir -p ~/.vscode-server/extensions && ln -sfn \"$d\" ~/.vscode-server/extensions/phroi.focus-timer"
 }
 ```
 

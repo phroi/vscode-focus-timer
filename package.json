@@ -22,26 +22,24 @@
   "contributes": {},
   "scripts": {
     "package": "pnpm install && pnpm build",
-    "build": "tsgo",
-    "watch": "tsgo -w",
+    "build": "tsc",
+    "watch": "tsc -w",
     "lint": "eslint .",
     "check": "pnpm clean:deep && pnpm install && pnpm lint && pnpm build",
     "check:fresh": "rm pnpm-lock.yaml && pnpm run check",
     "check:ci": "CI=true pnpm run check",
     "check:full": "pnpm check:fresh && pnpm check:ci",
     "clean": "rm -rf dist",
-    "clean:deep": "pnpm clean && rm -rf node_modules",
-    "coworker": "ln -sf AGENTS.md CLAUDE.md && NODE_OPTIONS=--max-old-space-size=16384 CLAUDE_CODE_EFFORT_LEVEL=high claude --model opus[1m] --dangerously-skip-permissions"
+    "clean:deep": "pnpm clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-code": "^2.1.47",
     "@eslint/js": "^9.39.2",
     "@types/node": "^20.17.0",
     "@types/vscode": "^1.109.0",
     "eslint": "^9.39.2",
     "prettier": "^3.8.1",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "@typescript/native-preview": "latest",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.0"
   },
   "packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937"
